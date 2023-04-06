@@ -246,7 +246,8 @@ class Dycheck(DataParser):
             frame_names = np.array(split_dict["frame_names"])[[0]]
             time_ids = np.array(split_dict["time_ids"])[[0]]
 
-        image_filenames, depth_filenames, cams = self.process_frames(frame_names, time_ids)
+        #image_filenames, depth_filenames, cams = self.process_frames(frame_names, time_ids)
+        image_filenames, cams = self.process_frames(frame_names, time_ids)
 
         scene_box = SceneBox(
             aabb=torch.tensor(
@@ -285,11 +286,12 @@ class Dycheck(DataParser):
         Returns:
             A list of camera, each entry is a dict of the camera.
         """
-        image_filenames, depth_filenames = [], []
+        #image_filenames, depth_filenames = [], []
+        image_filenames = []
         cams = []
         for idx, frame in enumerate(frame_names):
             image_filenames.append(self.data / f"rgb/{self.config.downscale_factor}x/{frame}.png")
-            depth_filenames.append(self.data / f"processed_depth/{self.config.downscale_factor}x/{frame}.npy")
+            #depth_filenames.append(self.data / f"processed_depth/{self.config.downscale_factor}x/{frame}.npy")
             cam_json = load_from_json(self.data / f"camera/{frame}.json")
             c2w = torch.as_tensor(cam_json["orientation"]).T
             position = torch.as_tensor(cam_json["position"])
@@ -330,16 +332,17 @@ class Dycheck(DataParser):
                 )
             CONSOLE.print("finished")
 
-        if not depth_filenames[0].exists():
-            CONSOLE.print(f"processed depth downscale factor {d}x not exist, converting")
-            (self.data / f"processed_depth/{d}x").mkdir(exist_ok=True, parents=True)
-            for idx, frame in enumerate(frame_names):
-                depth = np.load(self.data / f"depth/1x/{frame}.npy")
-                mask = rescale((depth != 0).astype(np.uint8) * 255, 1 / d, cv2.INTER_AREA)
-                depth = rescale(depth, 1 / d, cv2.INTER_AREA)
-                depth[mask != 255] = 0
-                depth = _rescale_depth(depth, cams[idx])
-                np.save(str(self.data / f"processed_depth/{d}x/{frame}.npy"), depth)
-            CONSOLE.print("finished")
+        #if not depth_filenames[0].exists():
+        #    CONSOLE.print(f"processed depth downscale factor {d}x not exist, converting")
+        #    (self.data / f"processed_depth/{d}x").mkdir(exist_ok=True, parents=True)
+        #    for idx, frame in enumerate(frame_names):
+        #        depth = np.load(self.data / f"depth/1x/{frame}.npy")
+        #        mask = rescale((depth != 0).astype(np.uint8) * 255, 1 / d, cv2.INTER_AREA)
+        #        depth = rescale(depth, 1 / d, cv2.INTER_AREA)
+        #        depth[mask != 255] = 0
+        #        depth = _rescale_depth(depth, cams[idx])
+        #        np.save(str(self.data / f"processed_depth/{d}x/{frame}.npy"), depth)
+        #    CONSOLE.print("finished")
 
-        return image_filenames, depth_filenames, cams
+        #return image_filenames, depth_filenames, cams
+        return image_filenames, cams
