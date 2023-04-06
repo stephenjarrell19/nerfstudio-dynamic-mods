@@ -267,7 +267,7 @@ class Dycheck(DataParser):
             scene_box=scene_box,
             metadata={
                 "depth_filenames": depth_filenames,
-                "depth_unit_scale_factor": scale,
+                #"depth_unit_scale_factor": scale,
                 "scale": scale,
                 "near": self._near * scale,
                 "far": self._far * scale,
