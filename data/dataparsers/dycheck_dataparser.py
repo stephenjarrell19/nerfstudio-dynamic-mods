@@ -266,7 +266,7 @@ class Dycheck(DataParser):
             alpha_color=alpha_color_tensor,
             scene_box=scene_box,
             metadata={
-                "depth_filenames": depth_filenames,
+               # "depth_filenames": depth_filenames,
                 #"depth_unit_scale_factor": scale,
                 "scale": scale,
                 "near": self._near * scale,
