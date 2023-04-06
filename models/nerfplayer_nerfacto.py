@@ -45,7 +45,6 @@ from nerfstudio.model_components.losses import (
 from nerfstudio.model_components.ray_samplers import ProposalNetworkSampler
 from nerfstudio.model_components.renderers import (
     AccumulationRenderer,
-    DepthRenderer,
     NormalsRenderer,
     RGBRenderer,
 )
@@ -160,7 +159,7 @@ class NerfplayerNerfactoModel(NerfactoModel):
         # renderers
         self.renderer_rgb = RGBRenderer(background_color=self.config.background_color)
         self.renderer_accumulation = AccumulationRenderer()
-        self.renderer_depth = DepthRenderer(method="expected")  # for depth loss
+        # self.renderer_depth = DepthRenderer(method="expected")  # for depth loss
         self.renderer_normals = NormalsRenderer()
 
         # shaders
@@ -186,14 +185,15 @@ class NerfplayerNerfactoModel(NerfactoModel):
         ray_samples_list.append(ray_samples)
 
         rgb = self.renderer_rgb(rgb=field_outputs[FieldHeadNames.RGB], weights=weights)
-        depth = self.renderer_depth(weights=weights, ray_samples=ray_samples)
+        # depth = self.renderer_depth(weights=weights, ray_samples=ray_samples)
         accumulation = self.renderer_accumulation(weights=weights)
 
         outputs = {
             "rgb": rgb,
             "accumulation": accumulation,
-            "depth": depth,
-        }
+            }
+            #    "depth": depth,
+        #}
 
         if self.config.predict_normals:
             outputs["normals"] = self.normals_shader(
@@ -219,8 +219,8 @@ class NerfplayerNerfactoModel(NerfactoModel):
                 field_outputs[FieldHeadNames.PRED_NORMALS],
             )
 
-        for i in range(self.config.num_proposal_iterations):
-            outputs[f"prop_depth_{i}"] = self.renderer_depth(weights=weights_list[i], ray_samples=ray_samples_list[i])
+        #for i in range(self.config.num_proposal_iterations):
+        #    outputs[f"prop_depth_{i}"] = self.renderer_depth(weights=weights_list[i], ray_samples=ray_samples_list[i])
 
         return outputs
 
@@ -244,13 +244,13 @@ class NerfplayerNerfactoModel(NerfactoModel):
                 loss_dict["pred_normal_loss"] = self.config.pred_normal_loss_mult * torch.mean(
                     outputs["rendered_pred_normal_loss"]
                 )
-            if "depth_image" in batch.keys() and self.config.depth_weight > 0:
-                mask = (batch["depth_image"] != 0).view([-1])
-                loss_dict["depth_loss"] = 0
-                l = lambda x: self.config.depth_weight * (x - batch["depth_image"][mask]).pow(2).mean()
-                loss_dict["depth_loss"] = l(outputs["depth"][mask])
-                for i in range(self.config.num_proposal_iterations):
-                    loss_dict["depth_loss"] += l(outputs[f"prop_depth_{i}"][mask])
+            #if "depth_image" in batch.keys() and self.config.depth_weight > 0:
+            #    mask = (batch["depth_image"] != 0).view([-1])
+            #    loss_dict["depth_loss"] = 0
+            #    l = lambda x: self.config.depth_weight * (x - batch["depth_image"][mask]).pow(2).mean()
+            #    loss_dict["depth_loss"] = l(outputs["depth"][mask])
+            #    for i in range(self.config.num_proposal_iterations):
+            #        loss_dict["depth_loss"] += l(outputs[f"prop_depth_{i}"][mask])
             if self.config.temporal_tv_weight > 0:
                 loss_dict["temporal_tv_loss"] = self.field.mlp_base.get_temporal_tv_loss()
                 for net in self.proposal_networks:
